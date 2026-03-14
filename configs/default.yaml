@@ -1,0 +1,61 @@
+# One Click LLM Trainer - Configuration
+
+project:
+  name: "my_project"
+  base_dir: "./data"
+
+runpod:
+  gpu_type_id: "NVIDIA RTX A5000"          # Default GPU for 7B models
+  cloud_type: "COMMUNITY"                   # COMMUNITY or SECURE
+  max_bid_per_gpu: 0.5                      # Max $/hr for spot instances
+  # Standard RunPod images — no custom Docker build required
+  training_image: "runpod/pytorch:2.2.0-py3.10-cuda12.1.1-devel-ubuntu22.04"
+  vllm_image: "vllm/vllm-openai:latest"
+
+huggingface:
+  repo_prefix: "oclt"                       # Model repos: {username}/oclt-{project_id}
+  private: true
+
+document_processing:
+  chunk_size: 512
+  chunk_overlap: 100
+  supported_formats:
+    - ".pdf"
+    - ".docx"
+    - ".txt"
+
+dataset_generation:
+  llm_model: "gpt-4o-mini"                 # LLM used to generate instruction examples
+  max_examples_per_chunk: 3
+  train_split: 0.8
+  val_split: 0.1
+  eval_split: 0.1
+
+training:
+  quantization: "4bit"                      # 4bit (QLoRA) or 8bit
+  lora:
+    r: 16
+    lora_alpha: 32
+    lora_dropout: 0.05
+    target_modules:
+      - "q_proj"
+      - "k_proj"
+      - "v_proj"
+      - "o_proj"
+  training_args:
+    num_train_epochs: 3
+    per_device_train_batch_size: 4
+    gradient_accumulation_steps: 4
+    learning_rate: 2.0e-4
+    warmup_ratio: 0.03
+    max_seq_length: 2048
+    logging_steps: 10
+    save_steps: 100
+    fp16: true
+
+deployment:
+  vllm:
+    tensor_parallel_size: 1
+    max_model_len: 4096
+    gpu_memory_utilization: 0.9
+  port: 8001

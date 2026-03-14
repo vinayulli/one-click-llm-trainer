@@ -1,0 +1,12 @@
+FROM vllm/vllm-openai:latest
+
+# Model will be pulled from HuggingFace at runtime via env vars
+# ENV MODEL_NAME="your-hf-username/your-model"
+# ENV HF_TOKEN="your-token"
+
+EXPOSE 8000
+
+ENTRYPOINT ["python", "-m", "vllm.entrypoints.openai.api_server", \
+    "--host", "0.0.0.0", \
+    "--port", "8000", \
+    "--trust-remote-code"]

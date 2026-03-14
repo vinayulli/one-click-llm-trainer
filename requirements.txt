@@ -1,0 +1,34 @@
+# Backend (orchestrator — no GPU needed)
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+python-multipart==0.0.20
+pydantic==2.10.4
+pydantic-settings==2.7.1
+httpx==0.28.1
+aiofiles==24.1.0
+loguru==0.7.3
+pyyaml>=6.0
+
+# Document Processing
+pypdf==5.1.0
+python-docx==1.1.2
+langchain-text-splitters==0.3.4
+
+# Dataset Generation
+openai==1.58.1
+
+# RunPod
+runpod==1.7.7
+
+# HuggingFace Hub (for model upload from backend)
+huggingface-hub>=0.21.0
+
+# Job persistence
+aiosqlite==0.20.0
+sqlalchemy[asyncio]==2.0.36
+
+# Background scheduler
+apscheduler==3.10.4
+
+# SSE
+sse-starlette==2.1.3

@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>One Click LLM Trainer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <div class="app-container">
+
+    <!-- Header -->
+    <header>
+      <h1><span>One Click</span> LLM Trainer</h1>
+      <p>Upload domain documents, auto-generate datasets, fine-tune on RunPod GPUs, evaluate, and deploy — all in one flow.</p>
+    </header>
+
+    <!-- Stepper -->
+    <div class="stepper" id="stepper"></div>
+
+    <!-- ═══════════ Step 1: Create Project ═══════════ -->
+    <div class="step-section active" id="step-create">
+      <div class="card">
+        <div class="card-header">
+          <div class="icon">1</div>
+          <h2>Create Project</h2>
+        </div>
+        <div id="create-alert"></div>
+        <div class="form-group">
+          <label for="project-name">Project Name</label>
+          <input type="text" id="project-name" placeholder="e.g. medical-qa-bot">
+        </div>
+        <div class="form-group">
+          <label for="project-desc">Description (optional)</label>
+          <input type="text" id="project-desc" placeholder="Fine-tune on internal medical documents">
+        </div>
+        <button class="btn btn-primary" id="btn-create" onclick="createProject()">Create Project</button>
+      </div>
+    </div>
+
+    <!-- ═══════════ Step 2: Upload Documents ═══════════ -->
+    <div class="step-section" id="step-upload">
+      <div class="card">
+        <div class="card-header">
+          <div class="icon">2</div>
+          <h2>Upload Domain Documents</h2>
+        </div>
+        <div id="upload-alert"></div>
+
+        <div class="upload-zone" id="upload-zone">
+          <div class="icon">&#128196;</div>
+          <p>Drag & drop files here, or click to browse</p>
+          <div class="formats">Supported: PDF, DOCX, TXT</div>
+          <input type="file" id="file-input" multiple accept=".pdf,.docx,.txt" hidden>
+        </div>
+
+        <div class="file-list" id="file-list"></div>
+
+        <div class="btn-group">
+          <button class="btn btn-primary" id="btn-upload" onclick="uploadAndProcess()">Upload & Process</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════ Step 3: Generate Dataset ═══════════ -->
+    <div class="step-section" id="step-dataset">
+      <div class="card">
+        <div class="card-header">
+          <div class="icon">3</div>
+          <h2>Generate Instruction Dataset</h2>
+        </div>
+        <p style="color:var(--text-dim);margin-bottom:20px;font-size:0.9rem">
+          Uses GPT-4o-mini to convert your document chunks into instruction/input/output training examples.
+          The dataset is automatically split into 80% train, 10% validation, and 10% eval.
+        </p>
+        <div id="dataset-alert"></div>
+        <button class="btn btn-primary" id="btn-generate" onclick="generateDataset()">Generate Dataset</button>
+
+        <div id="dataset-stats"></div>
+        <div id="dataset-preview"></div>
+
+        <div class="btn-group">
+          <button class="btn btn-success" id="btn-next-model" style="display:none" onclick="nextStep(); loadModelSuggestions()">
+            Next: Select Model &rarr;
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════ Step 4: Model Selection ═══════════ -->
+    <div class="step-section" id="step-model">
+      <div class="card">
+        <div class="card-header">
+          <div class="icon">4</div>
+          <h2>Auto Model Selection</h2>
+        </div>
+        <p style="color:var(--text-dim);margin-bottom:20px;font-size:0.9rem">
+          Based on your dataset size, language, and domain, the system recommends the best base model for fine-tuning.
+          You can accept the recommendation or choose another model.
+        </p>
+        <div id="model-alert"></div>
+        <div id="model-suggestions">
+          <div class="loading-state"><div class="spinner"></div>Analyzing dataset...</div>
+        </div>
+        <div class="btn-group">
+          <button class="btn btn-success" onclick="nextStep()">Next: Start Training &rarr;</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════ Step 5: Training ═══════════ -->
+    <div class="step-section" id="step-train">
+      <div class="card">
+        <div class="card-header">
+          <div class="icon">5</div>
+          <h2>Fine-Tune on RunPod</h2>
+        </div>
+        <p style="color:var(--text-dim);margin-bottom:20px;font-size:0.9rem">
+          Launches a GPU pod on RunPod, runs QLoRA fine-tuning, merges the adapter, and uploads the final model to HuggingFace.
+        </p>
+        <div id="train-alert"></div>
+
+        <div class="btn-group">
+          <button class="btn btn-primary" id="btn-train" onclick="startTraining()">Start Training</button>
+          <button class="btn btn-secondary" id="btn-cancel-train" style="display:none;color:var(--error);border-color:var(--error)" onclick="cancelTraining()">Cancel</button>
+          <button class="btn btn-success" id="btn-next-eval" style="display:none" onclick="nextStep()">Next: Evaluate &rarr;</button>
+        </div>
+
+        <div id="training-progress" style="display:none">
+          <div class="progress-container">
+            <div class="progress-bar-bg">
+              <div class="progress-bar-fill" id="train-progress-fill" style="width:0%"></div>
+            </div>
+            <div class="progress-label">
+              <span>Training in progress...</span>
+              <span id="train-progress-pct">0%</span>
+            </div>
+          </div>
+          <div id="train-stats"></div>
+          <div class="training-log" id="training-log"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════ Step 6: Evaluation ═══════════ -->
+    <div class="step-section" id="step-evaluate">
+      <div class="card">
+        <div class="card-header">
+          <div class="icon">6</div>
+          <h2>Evaluate: Base vs Fine-Tuned</h2>
+        </div>
+        <p style="color:var(--text-dim);margin-bottom:20px;font-size:0.9rem">
+          Runs both the base model and your fine-tuned model on the held-out evaluation set.
+          Compares using exact match, F1 score, and LLM judge metrics.
+        </p>
+        <div id="eval-alert"></div>
+
+        <button class="btn btn-primary" id="btn-eval" onclick="startEvaluation()">Start Evaluation</button>
+        <button class="btn btn-success" id="btn-next-deploy" style="display:none" onclick="nextStep()">Next: Deploy &rarr;</button>
+
+        <div id="eval-progress" style="display:none">
+          <div class="loading-state"><div class="spinner"></div>Evaluating models on RunPod GPU...</div>
+        </div>
+
+        <div id="eval-results"></div>
+      </div>
+    </div>
+
+    <!-- ═══════════ Step 7: Deploy ═══════════ -->
+    <div class="step-section" id="step-deploy">
+      <div class="card">
+        <div class="card-header">
+          <div class="icon">7</div>
+          <h2>Deploy with vLLM</h2>
+        </div>
+        <p style="color:var(--text-dim);margin-bottom:20px;font-size:0.9rem">
+          Deploys your fine-tuned model on RunPod using vLLM. Provides an OpenAI-compatible API endpoint
+          with ready-to-use sample code in Python, cURL, and JavaScript.
+        </p>
+        <div id="deploy-alert"></div>
+
+        <button class="btn btn-primary" id="btn-deploy" onclick="deployModel()">Deploy Model</button>
+
+        <div id="deploy-result"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

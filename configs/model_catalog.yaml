@@ -1,0 +1,115 @@
+# Supported base models for fine-tuning
+models:
+  - model_id: "mistralai/Mistral-7B-Instruct-v0.3"
+    display_name: "Mistral 7B Instruct v0.3"
+    parameter_count: "7B"
+    param_billions: 7.0
+    context_length: 32768
+    languages: ["en"]
+    domains: ["general", "instruction-following"]
+    min_gpu_vram_gb: 24
+    recommended_gpu: "NVIDIA RTX A5000"
+    cost_per_hour: 0.22
+    recommended_lora_r: 16
+    recommended_batch_size: 4
+
+  - model_id: "mistralai/Mistral-7B-v0.1"
+    display_name: "Mistral 7B Base"
+    parameter_count: "7B"
+    param_billions: 7.0
+    context_length: 32768
+    languages: ["en"]
+    domains: ["general"]
+    min_gpu_vram_gb: 24
+    recommended_gpu: "NVIDIA RTX A5000"
+    cost_per_hour: 0.22
+    recommended_lora_r: 16
+    recommended_batch_size: 4
+
+  - model_id: "Qwen/Qwen2.5-7B-Instruct"
+    display_name: "Qwen 2.5 7B Instruct"
+    parameter_count: "7B"
+    param_billions: 7.0
+    context_length: 131072
+    languages: ["en", "zh", "multilingual"]
+    domains: ["general", "multilingual", "code", "math"]
+    min_gpu_vram_gb: 24
+    recommended_gpu: "NVIDIA RTX A5000"
+    cost_per_hour: 0.22
+    recommended_lora_r: 16
+    recommended_batch_size: 4
+
+  - model_id: "Qwen/Qwen2.5-3B-Instruct"
+    display_name: "Qwen 2.5 3B Instruct"
+    parameter_count: "3B"
+    param_billions: 3.0
+    context_length: 32768
+    languages: ["en", "zh", "multilingual"]
+    domains: ["general", "multilingual"]
+    min_gpu_vram_gb: 16
+    recommended_gpu: "NVIDIA RTX A4000"
+    cost_per_hour: 0.16
+    recommended_lora_r: 8
+    recommended_batch_size: 8
+
+  - model_id: "meta-llama/Llama-3.1-8B-Instruct"
+    display_name: "Llama 3.1 8B Instruct"
+    parameter_count: "8B"
+    param_billions: 8.0
+    context_length: 131072
+    languages: ["en"]
+    domains: ["general", "instruction-following", "code"]
+    min_gpu_vram_gb: 24
+    recommended_gpu: "NVIDIA RTX A5000"
+    cost_per_hour: 0.22
+    recommended_lora_r: 16
+    recommended_batch_size: 4
+
+  - model_id: "meta-llama/Llama-3.1-8B"
+    display_name: "Llama 3.1 8B Base"
+    parameter_count: "8B"
+    param_billions: 8.0
+    context_length: 131072
+    languages: ["en"]
+    domains: ["general"]
+    min_gpu_vram_gb: 24
+    recommended_gpu: "NVIDIA RTX A5000"
+    cost_per_hour: 0.22
+    recommended_lora_r: 16
+    recommended_batch_size: 4
+
+  - model_id: "google/gemma-2-9b-it"
+    display_name: "Gemma 2 9B Instruct"
+    parameter_count: "9B"
+    param_billions: 9.0
+    context_length: 8192
+    languages: ["en"]
+    domains: ["general", "instruction-following"]
+    min_gpu_vram_gb: 24
+    recommended_gpu: "NVIDIA RTX A5000"
+    cost_per_hour: 0.22
+    recommended_lora_r: 16
+    recommended_batch_size: 4
+
+  - model_id: "microsoft/Phi-3.5-mini-instruct"
+    display_name: "Phi 3.5 Mini (3.8B)"
+    parameter_count: "3.8B"
+    param_billions: 3.8
+    context_length: 131072
+    languages: ["en"]
+    domains: ["general", "code", "math"]
+    min_gpu_vram_gb: 16
+    recommended_gpu: "NVIDIA RTX A4000"
+    cost_per_hour: 0.16
+    recommended_lora_r: 8
+    recommended_batch_size: 8
+
+# GPU pricing reference (RunPod community cloud, approximate)
+gpu_pricing:
+  "NVIDIA RTX A4000": 0.16
+  "NVIDIA RTX A5000": 0.22
+  "NVIDIA A40": 0.39
+  "NVIDIA RTX A6000": 0.44
+  "NVIDIA A100 80GB PCIe": 1.09
+  "NVIDIA A100-SXM4-80GB": 1.34
+  "NVIDIA H100 80GB HBM3": 2.49
