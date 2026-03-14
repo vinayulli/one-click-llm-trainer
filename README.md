@@ -86,18 +86,42 @@ GET    /api/projects/{id}/deploy/sample-code  Ready-to-use code snippets
 DELETE /api/projects/{id}/deploy              Stop deployment
 ```
 
-## Supported Base Models
+## Supported Base Models (27 models, 7 families)
 
-| Model | Size | Best For |
-|-------|------|----------|
-| Mistral 7B Instruct v0.3 | 7B | General English tasks |
-| Qwen 2.5 7B Instruct | 7B | Multilingual, code, math |
-| Qwen 2.5 3B Instruct | 3B | Small datasets, budget training |
-| Llama 3.1 8B Instruct | 8B | General purpose, code |
-| Gemma 2 9B IT | 9B | Instruction following |
-| Phi 3.5 Mini | 3.8B | Code, math, small footprint |
+| Family | Model | Size | Best For |
+|--------|-------|------|----------|
+| **Qwen 3** | Qwen 3 0.6B | 0.6B | Edge deployment, tiny datasets |
+| | Qwen 3 1.7B | 1.7B | Budget training, multilingual |
+| | Qwen 3 4B | 4B | Best quality/cost ratio, math (MATH-500: 97.0) |
+| | Qwen 3 8B | 8B | Best overall sub-10B, 119 languages |
+| **Qwen 2.5** | Qwen 2.5 0.5B Instruct | 0.5B | Prototyping, tiny datasets |
+| | Qwen 2.5 1.5B Instruct | 1.5B | Small model, multilingual |
+| | Qwen 2.5 3B Instruct | 3B | General purpose, affordable |
+| | Qwen 2.5 7B Instruct | 7B | Proven workhorse, 128K context |
+| | Qwen 2.5 Coder 1.5B | 1.5B | Code, small datasets |
+| | Qwen 2.5 Coder 3B | 3B | Code generation |
+| | Qwen 2.5 Coder 7B | 7B | Top-tier code fine-tuning |
+| **Gemma 3** | Gemma 3 1B IT | 1B | Lightweight multilingual (140+ langs) |
+| | Gemma 3 4B IT | 4B | Multilingual, code (HumanEval 71.3) |
+| **Gemma 2** | Gemma 2 2B IT | 2.6B | Simple English tasks |
+| | Gemma 2 9B IT | 9B | Instruction following |
+| **Llama 3.2** | Llama 3.2 1B | 1B | On-device, 128K context |
+| | Llama 3.2 1B Instruct | 1B | Lightweight instruction following |
+| | Llama 3.2 3B | 3B | Tool use, agentic workflows |
+| | Llama 3.2 3B Instruct | 3B | Multilingual dialogue |
+| **Llama 3.1** | Llama 3.1 8B | 8B | General purpose, code (HumanEval 72.6) |
+| | Llama 3.1 8B Instruct | 8B | Tool use, instruction following |
+| **Phi** | Phi 3.5 Mini | 3.8B | Summarization, reasoning |
+| | Phi 4 Mini | 3.8B | Best coding at this size (HumanEval 74.4) |
+| **SmolLM2** | SmolLM2 1.7B Instruct | 1.7B | Compact general purpose |
+| | SmolLM2 360M Instruct | 360M | Ultra-tiny, edge/classification |
 
 Auto-selection criteria: dataset size, language detection, domain detection, GPU cost.
+
+## Example Outputs
+
+- **Example Instruction Dataset**: https://huggingface.co/datasets/vinaybabu/oclt-data-2aba2de4dcc6
+- **Example Fine-tuned Model**: https://huggingface.co/vinaybabu/oclt-87c32cac2338
 
 ## Project Structure
 
