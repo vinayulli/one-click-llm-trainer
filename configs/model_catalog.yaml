@@ -1,36 +1,68 @@
-# Supported base models for fine-tuning
+# ═══════════════════════════════════════════════════════════════════════════
+# One Click LLM Trainer — Supported Base Models (1B–10B Parameters)
+# ═══════════════════════════════════════════════════════════════════════════
+
 models:
-  - model_id: "mistralai/Mistral-7B-Instruct-v0.3"
-    display_name: "Mistral 7B Instruct v0.3"
-    parameter_count: "7B"
-    param_billions: 7.0
-    context_length: 32768
-    languages: ["en"]
-    domains: ["general", "instruction-following"]
-    min_gpu_vram_gb: 24
-    recommended_gpu: "NVIDIA RTX A5000"
-    cost_per_hour: 0.22
-    recommended_lora_r: 16
-    recommended_batch_size: 4
 
-  - model_id: "mistralai/Mistral-7B-v0.1"
-    display_name: "Mistral 7B Base"
-    parameter_count: "7B"
-    param_billions: 7.0
-    context_length: 32768
-    languages: ["en"]
-    domains: ["general"]
-    min_gpu_vram_gb: 24
-    recommended_gpu: "NVIDIA RTX A5000"
-    cost_per_hour: 0.22
-    recommended_lora_r: 16
-    recommended_batch_size: 4
+  # ─────────────────────────── Qwen 3 ───────────────────────────
+  # Latest generation. 119 languages, dual thinking modes, 36T training tokens.
+  # Qwen3 models punch well above their weight class.
 
-  - model_id: "Qwen/Qwen2.5-7B-Instruct"
-    display_name: "Qwen 2.5 7B Instruct"
-    parameter_count: "7B"
-    param_billions: 7.0
-    context_length: 131072
+  - model_id: "Qwen/Qwen3-0.6B"
+    display_name: "Qwen 3 0.6B"
+    parameter_count: "0.6B"
+    param_billions: 0.6
+    context_length: 32768
+    languages: ["en", "zh", "multilingual"]
+    domains: ["general", "multilingual"]
+    min_gpu_vram_gb: 8
+    recommended_gpu: "NVIDIA RTX A4000"
+    cost_per_hour: 0.16
+    recommended_lora_r: 8
+    recommended_batch_size: 16
+    summary: "Ultra-compact Qwen3. Matches Qwen2.5-1.5B quality in 0.6B params. Good for edge deployment or tiny datasets. 119 languages."
+    benchmarks:
+      notes: "Comparable to Qwen2.5-1.5B across benchmarks"
+
+  - model_id: "Qwen/Qwen3-1.7B"
+    display_name: "Qwen 3 1.7B"
+    parameter_count: "1.7B"
+    param_billions: 1.7
+    context_length: 32768
+    languages: ["en", "zh", "multilingual"]
+    domains: ["general", "multilingual", "code", "math"]
+    min_gpu_vram_gb: 8
+    recommended_gpu: "NVIDIA RTX A4000"
+    cost_per_hour: 0.16
+    recommended_lora_r: 8
+    recommended_batch_size: 16
+    summary: "Small but punches like Qwen2.5-3B. Dual thinking modes (think/non-think). Excellent for budget training with good multilingual support."
+    benchmarks:
+      notes: "Comparable to Qwen2.5-3B"
+
+  - model_id: "Qwen/Qwen3-4B"
+    display_name: "Qwen 3 4B"
+    parameter_count: "4B"
+    param_billions: 4.0
+    context_length: 32768
+    languages: ["en", "zh", "multilingual"]
+    domains: ["general", "multilingual", "code", "math"]
+    min_gpu_vram_gb: 16
+    recommended_gpu: "NVIDIA RTX A4000"
+    cost_per_hour: 0.16
+    recommended_lora_r: 16
+    recommended_batch_size: 8
+    summary: "Sweet spot for quality vs cost. Near-perfect math (MATH-500: 97.0). Supports 119 languages. Competitive with much larger models."
+    benchmarks:
+      mmlu_redux: 83.7
+      math_500: 97.0
+      c_eval: 77.5
+
+  - model_id: "Qwen/Qwen3-8B"
+    display_name: "Qwen 3 8B"
+    parameter_count: "8B"
+    param_billions: 8.0
+    context_length: 32768
     languages: ["en", "zh", "multilingual"]
     domains: ["general", "multilingual", "code", "math"]
     min_gpu_vram_gb: 24
@@ -38,6 +70,43 @@ models:
     cost_per_hour: 0.22
     recommended_lora_r: 16
     recommended_batch_size: 4
+    summary: "Flagship sub-10B model. Matches Qwen2.5-14B performance. Best overall quality for general, code, math, and multilingual tasks in this class."
+    benchmarks:
+      notes: "Comparable to Qwen2.5-14B across all benchmarks"
+
+  # ─────────────────────────── Qwen 2.5 ───────────────────────────
+  # Proven, stable. 29 languages, 18T training tokens. Mature ecosystem.
+
+  - model_id: "Qwen/Qwen2.5-0.5B-Instruct"
+    display_name: "Qwen 2.5 0.5B Instruct"
+    parameter_count: "0.5B"
+    param_billions: 0.5
+    context_length: 32768
+    languages: ["en", "zh", "multilingual"]
+    domains: ["general", "multilingual"]
+    min_gpu_vram_gb: 8
+    recommended_gpu: "NVIDIA RTX A4000"
+    cost_per_hour: 0.16
+    recommended_lora_r: 8
+    recommended_batch_size: 16
+    summary: "Smallest Qwen2.5. Outperforms Gemma2-2.6B on math/coding despite being 5x smaller. Good for prototyping."
+    benchmarks:
+      notes: "Outperforms Gemma2-2.6B on math and coding benchmarks"
+
+  - model_id: "Qwen/Qwen2.5-1.5B-Instruct"
+    display_name: "Qwen 2.5 1.5B Instruct"
+    parameter_count: "1.5B"
+    param_billions: 1.5
+    context_length: 32768
+    languages: ["en", "zh", "multilingual"]
+    domains: ["general", "multilingual", "code"]
+    min_gpu_vram_gb: 8
+    recommended_gpu: "NVIDIA RTX A4000"
+    cost_per_hour: 0.16
+    recommended_lora_r: 8
+    recommended_batch_size: 16
+    summary: "Solid small model with instruction tuning. Good balance of capability and efficiency. 29 languages."
+    benchmarks: {}
 
   - model_id: "Qwen/Qwen2.5-3B-Instruct"
     display_name: "Qwen 2.5 3B Instruct"
@@ -51,35 +120,134 @@ models:
     cost_per_hour: 0.16
     recommended_lora_r: 8
     recommended_batch_size: 8
+    summary: "Mid-tier Qwen2.5. Strong general purpose with good multilingual coverage. Affordable to fine-tune."
+    benchmarks: {}
 
-  - model_id: "meta-llama/Llama-3.1-8B-Instruct"
-    display_name: "Llama 3.1 8B Instruct"
-    parameter_count: "8B"
-    param_billions: 8.0
+  - model_id: "Qwen/Qwen2.5-7B-Instruct"
+    display_name: "Qwen 2.5 7B Instruct"
+    parameter_count: "7B"
+    param_billions: 7.0
     context_length: 131072
-    languages: ["en"]
-    domains: ["general", "instruction-following", "code"]
+    languages: ["en", "zh", "multilingual"]
+    domains: ["general", "multilingual", "code", "math"]
     min_gpu_vram_gb: 24
     recommended_gpu: "NVIDIA RTX A5000"
     cost_per_hour: 0.22
     recommended_lora_r: 16
     recommended_batch_size: 4
+    summary: "Proven workhorse. MMLU 74.2, strong math (49.8) and coding (HumanEval 57.9). 128K context with YaRN."
+    benchmarks:
+      mmlu: 74.2
+      math: 49.8
+      humaneval: 57.9
 
-  - model_id: "meta-llama/Llama-3.1-8B"
-    display_name: "Llama 3.1 8B Base"
-    parameter_count: "8B"
-    param_billions: 8.0
+  # ─────────────────── Qwen 2.5 Coder ───────────────────
+  # Specialized for code. 5.5T tokens including source code.
+
+  - model_id: "Qwen/Qwen2.5-Coder-1.5B-Instruct"
+    display_name: "Qwen 2.5 Coder 1.5B"
+    parameter_count: "1.5B"
+    param_billions: 1.5
+    context_length: 32768
+    languages: ["en", "zh"]
+    domains: ["code"]
+    min_gpu_vram_gb: 8
+    recommended_gpu: "NVIDIA RTX A4000"
+    cost_per_hour: 0.16
+    recommended_lora_r: 8
+    recommended_batch_size: 16
+    summary: "Tiny code specialist. Trained on 5.5T tokens including massive source code corpus. Best for code-heavy small datasets."
+    benchmarks: {}
+
+  - model_id: "Qwen/Qwen2.5-Coder-3B-Instruct"
+    display_name: "Qwen 2.5 Coder 3B"
+    parameter_count: "3B"
+    param_billions: 3.0
+    context_length: 32768
+    languages: ["en", "zh"]
+    domains: ["code"]
+    min_gpu_vram_gb: 16
+    recommended_gpu: "NVIDIA RTX A4000"
+    cost_per_hour: 0.16
+    recommended_lora_r: 8
+    recommended_batch_size: 8
+    summary: "Mid-size code model. Strong code generation and understanding with 5.5T training tokens."
+    benchmarks: {}
+
+  - model_id: "Qwen/Qwen2.5-Coder-7B-Instruct"
+    display_name: "Qwen 2.5 Coder 7B"
+    parameter_count: "7B"
+    param_billions: 7.0
+    context_length: 32768
+    languages: ["en", "zh"]
+    domains: ["code"]
+    min_gpu_vram_gb: 24
+    recommended_gpu: "NVIDIA RTX A5000"
+    cost_per_hour: 0.22
+    recommended_lora_r: 16
+    recommended_batch_size: 4
+    summary: "Top-tier open code model at 7B scale. Excellent for fine-tuning on code-related domain data."
+    benchmarks: {}
+
+  # ─────────────────────────── Gemma 3 ───────────────────────────
+  # Google's latest. 140+ languages, multimodal at 4B+.
+
+  - model_id: "google/gemma-3-1b-it"
+    display_name: "Gemma 3 1B IT"
+    parameter_count: "1B"
+    param_billions: 1.0
+    context_length: 32768
+    languages: ["en", "multilingual"]
+    domains: ["general", "multilingual"]
+    min_gpu_vram_gb: 8
+    recommended_gpu: "NVIDIA RTX A4000"
+    cost_per_hour: 0.16
+    recommended_lora_r: 8
+    recommended_batch_size: 16
+    summary: "Google's smallest Gemma3. Text-only, 140+ languages, 32K context. GSM8K 62.8. Great for lightweight multilingual fine-tuning."
+    benchmarks:
+      gsm8k: 62.8
+
+  - model_id: "google/gemma-3-4b-it"
+    display_name: "Gemma 3 4B IT"
+    parameter_count: "4B"
+    param_billions: 4.0
     context_length: 131072
+    languages: ["en", "multilingual"]
+    domains: ["general", "multilingual", "code"]
+    min_gpu_vram_gb: 16
+    recommended_gpu: "NVIDIA RTX A4000"
+    cost_per_hour: 0.16
+    recommended_lora_r: 16
+    recommended_batch_size: 8
+    summary: "Punches way above its weight — competitive with Gemma2-27B-IT. 128K context, 140+ languages. GSM8K 89.2, HumanEval 71.3."
+    benchmarks:
+      gsm8k: 89.2
+      humaneval: 71.3
+
+  # ─────────────────────────── Gemma 2 ───────────────────────────
+  # Proven, stable. Shorter context but well-tested.
+
+  - model_id: "google/gemma-2-2b-it"
+    display_name: "Gemma 2 2B IT"
+    parameter_count: "2.6B"
+    param_billions: 2.6
+    context_length: 8192
     languages: ["en"]
     domains: ["general"]
-    min_gpu_vram_gb: 24
-    recommended_gpu: "NVIDIA RTX A5000"
-    cost_per_hour: 0.22
-    recommended_lora_r: 16
-    recommended_batch_size: 4
+    min_gpu_vram_gb: 8
+    recommended_gpu: "NVIDIA RTX A4000"
+    cost_per_hour: 0.16
+    recommended_lora_r: 8
+    recommended_batch_size: 16
+    summary: "Compact, proven model. MMLU 52.2. Short 8K context is a limitation. Best for English-only, simple tasks."
+    benchmarks:
+      mmlu: 52.2
+      gsm8k: 24.3
+      humaneval: 20.1
 
   - model_id: "google/gemma-2-9b-it"
-    display_name: "Gemma 2 9B Instruct"
+    display_name: "Gemma 2 9B IT"
     parameter_count: "9B"
     param_billions: 9.0
     context_length: 8192
@@ -90,6 +258,115 @@ models:
     cost_per_hour: 0.22
     recommended_lora_r: 16
     recommended_batch_size: 4
+    summary: "Strong 9B model. MMLU 71.3, GSM8K 68.6. Well-tested ecosystem. 8K context limits long-doc use cases."
+    benchmarks:
+      mmlu: 71.3
+      gsm8k: 68.6
+      humaneval: 40.2
+
+  # ─────────────────────────── Llama 3.2 ───────────────────────────
+  # Meta's small models. 128K context, pruned from larger models.
+
+  - model_id: "meta-llama/Llama-3.2-1B"
+    display_name: "Llama 3.2 1B"
+    parameter_count: "1B"
+    param_billions: 1.0
+    context_length: 131072
+    languages: ["en", "de", "fr", "it", "pt", "hi", "es", "th"]
+    domains: ["general"]
+    min_gpu_vram_gb: 8
+    recommended_gpu: "NVIDIA RTX A4000"
+    cost_per_hour: 0.16
+    recommended_lora_r: 8
+    recommended_batch_size: 16
+    summary: "Meta's smallest Llama. 128K context in just 1B params. Distilled from larger Llama 3.1. 8 languages. Optimized for on-device."
+    benchmarks:
+      bfcl_v2: 25.7
+
+  - model_id: "meta-llama/Llama-3.2-1B-Instruct"
+    display_name: "Llama 3.2 1B Instruct"
+    parameter_count: "1B"
+    param_billions: 1.0
+    context_length: 131072
+    languages: ["en", "de", "fr", "it", "pt", "hi", "es", "th"]
+    domains: ["general", "instruction-following"]
+    min_gpu_vram_gb: 8
+    recommended_gpu: "NVIDIA RTX A4000"
+    cost_per_hour: 0.16
+    recommended_lora_r: 8
+    recommended_batch_size: 16
+    summary: "Instruction-tuned Llama 1B. 128K context, 8 languages. Good for lightweight instruction-following fine-tuning."
+    benchmarks: {}
+
+  - model_id: "meta-llama/Llama-3.2-3B"
+    display_name: "Llama 3.2 3B"
+    parameter_count: "3B"
+    param_billions: 3.0
+    context_length: 131072
+    languages: ["en", "de", "fr", "it", "pt", "hi", "es", "th"]
+    domains: ["general"]
+    min_gpu_vram_gb: 16
+    recommended_gpu: "NVIDIA RTX A4000"
+    cost_per_hour: 0.16
+    recommended_lora_r: 8
+    recommended_batch_size: 8
+    summary: "Solid 3B from Meta. 128K context, ARC 78.6. Distilled from Llama 3.1 with strong tool-use and agentic capabilities."
+    benchmarks:
+      arc: 78.6
+      bfcl_v2: 67.0
+
+  - model_id: "meta-llama/Llama-3.2-3B-Instruct"
+    display_name: "Llama 3.2 3B Instruct"
+    parameter_count: "3B"
+    param_billions: 3.0
+    context_length: 131072
+    languages: ["en", "de", "fr", "it", "pt", "hi", "es", "th"]
+    domains: ["general", "instruction-following"]
+    min_gpu_vram_gb: 16
+    recommended_gpu: "NVIDIA RTX A4000"
+    cost_per_hour: 0.16
+    recommended_lora_r: 8
+    recommended_batch_size: 8
+    summary: "Instruction-tuned Llama 3B. Strong for multilingual dialogue, tool use, and agentic workflows. 128K context."
+    benchmarks: {}
+
+  # ─────────────────────────── Llama 3.1 ───────────────────────────
+
+  - model_id: "meta-llama/Llama-3.1-8B"
+    display_name: "Llama 3.1 8B"
+    parameter_count: "8B"
+    param_billions: 8.0
+    context_length: 131072
+    languages: ["en", "de", "fr", "it", "pt", "hi", "es", "th"]
+    domains: ["general", "code"]
+    min_gpu_vram_gb: 24
+    recommended_gpu: "NVIDIA RTX A5000"
+    cost_per_hour: 0.22
+    recommended_lora_r: 16
+    recommended_batch_size: 4
+    summary: "Proven 8B base. MMLU 73.0, GSM8K 84.5, HumanEval 72.6. 128K context. 15T training tokens. Strong all-rounder."
+    benchmarks:
+      mmlu: 73.0
+      gsm8k: 84.5
+      humaneval: 72.6
+
+  - model_id: "meta-llama/Llama-3.1-8B-Instruct"
+    display_name: "Llama 3.1 8B Instruct"
+    parameter_count: "8B"
+    param_billions: 8.0
+    context_length: 131072
+    languages: ["en", "de", "fr", "it", "pt", "hi", "es", "th"]
+    domains: ["general", "instruction-following", "code"]
+    min_gpu_vram_gb: 24
+    recommended_gpu: "NVIDIA RTX A5000"
+    cost_per_hour: 0.22
+    recommended_lora_r: 16
+    recommended_batch_size: 4
+    summary: "Instruction-tuned Llama 8B. Excellent for tool use, multilingual dialogue, and general instruction following. 128K context."
+    benchmarks: {}
+
+  # ─────────────────────── Microsoft Phi ───────────────────────
+  # Exceptionally strong for their size. Code and math specialists.
 
   - model_id: "microsoft/Phi-3.5-mini-instruct"
     display_name: "Phi 3.5 Mini (3.8B)"
@@ -103,13 +380,122 @@ models:
     cost_per_hour: 0.16
     recommended_lora_r: 8
     recommended_batch_size: 8
+    summary: "Exceptional for 3.8B. MMLU 69.0, GSM8K 86.2, HumanEval 62.8. 128K context. Strong at summarization and reasoning."
+    benchmarks:
+      mmlu: 69.0
+      gsm8k: 86.2
+      humaneval: 62.8
+      arc: 84.6
 
-# GPU pricing reference (RunPod community cloud, approximate)
+  - model_id: "microsoft/Phi-4-mini-instruct"
+    display_name: "Phi 4 Mini (3.8B)"
+    parameter_count: "3.8B"
+    param_billions: 3.8
+    context_length: 131072
+    languages: ["en", "multilingual"]
+    domains: ["general", "code", "math"]
+    min_gpu_vram_gb: 16
+    recommended_gpu: "NVIDIA RTX A4000"
+    cost_per_hour: 0.16
+    recommended_lora_r: 8
+    recommended_batch_size: 8
+    summary: "Latest Phi. GSM8K 88.6, HumanEval 74.4 — best coding score in this size class. 200K vocab for broader language coverage."
+    benchmarks:
+      mmlu: 67.3
+      gsm8k: 88.6
+      humaneval: 74.4
+      arc: 83.7
+
+  # ─────────────────────── SmolLM2 ───────────────────────
+  # HuggingFace's tiny models. Designed for edge/on-device.
+
+  - model_id: "HuggingFaceTB/SmolLM2-1.7B-Instruct"
+    display_name: "SmolLM2 1.7B Instruct"
+    parameter_count: "1.7B"
+    param_billions: 1.7
+    context_length: 2048
+    languages: ["en"]
+    domains: ["general"]
+    min_gpu_vram_gb: 8
+    recommended_gpu: "NVIDIA RTX A4000"
+    cost_per_hour: 0.16
+    recommended_lora_r: 8
+    recommended_batch_size: 16
+    summary: "HuggingFace's compact model. 11T training tokens. Outperforms Qwen2.5-1.5B on MMLU-Pro. Only 2K context is a limitation."
+    benchmarks:
+      hellaswag: 68.7
+      arc: 57.1
+
+  - model_id: "HuggingFaceTB/SmolLM2-360M-Instruct"
+    display_name: "SmolLM2 360M Instruct"
+    parameter_count: "360M"
+    param_billions: 0.36
+    context_length: 2048
+    languages: ["en"]
+    domains: ["general"]
+    min_gpu_vram_gb: 4
+    recommended_gpu: "NVIDIA RTX A4000"
+    cost_per_hour: 0.16
+    recommended_lora_r: 4
+    recommended_batch_size: 32
+    summary: "Ultra-tiny model for edge deployment. 4T training tokens. Best for simple classification or extraction tasks."
+    benchmarks: {}
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Benchmark Comparison (Top Models at Each Size)
+# ═══════════════════════════════════════════════════════════════════════════
+#
+# ┌──────────────────────┬──────┬───────┬────────────┬──────────┬──────┐
+# │ Model                │ MMLU │ GSM8K │ HumanEval  │ ARC      │ Size │
+# ├──────────────────────┼──────┼───────┼────────────┼──────────┼──────┤
+# │ Qwen3-8B             │ ~80+ │ ~95+  │ ~70+       │ —        │  8B  │
+# │ Llama-3.1-8B         │ 73.0 │ 84.5  │ 72.6       │ —        │  8B  │
+# │ Qwen2.5-7B-Instruct  │ 74.2 │ —     │ 57.9       │ —        │  7B  │
+# │ Gemma-2-9B-IT        │ 71.3 │ 68.6  │ 40.2       │ —        │  9B  │
+# ├──────────────────────┼──────┼───────┼────────────┼──────────┼──────┤
+# │ Qwen3-4B             │ 83.7*│ ~95+  │ ~65+       │ —        │  4B  │
+# │ Gemma-3-4B-IT        │ —    │ 89.2  │ 71.3       │ —        │  4B  │
+# │ Phi-4-Mini           │ 67.3 │ 88.6  │ 74.4       │ 83.7     │ 3.8B │
+# │ Phi-3.5-Mini         │ 69.0 │ 86.2  │ 62.8       │ 84.6     │ 3.8B │
+# ├──────────────────────┼──────┼───────┼────────────┼──────────┼──────┤
+# │ Qwen2.5-3B-Instruct  │ —    │ —     │ —          │ —        │  3B  │
+# │ Llama-3.2-3B         │ —    │ —     │ —          │ 78.6     │  3B  │
+# │ Gemma-2-2B-IT        │ 52.2 │ 24.3  │ 20.1       │ —        │ 2.6B │
+# ├──────────────────────┼──────┼───────┼────────────┼──────────┼──────┤
+# │ Qwen3-1.7B           │ —    │ —     │ —          │ —        │ 1.7B │
+# │ SmolLM2-1.7B         │ —    │ —     │ —          │ 57.1     │ 1.7B │
+# │ Qwen2.5-1.5B-Instruct│ —    │ —     │ —          │ —        │ 1.5B │
+# │ Gemma-3-1B-IT        │ —    │ 62.8  │ —          │ —        │  1B  │
+# │ Llama-3.2-1B         │ —    │ —     │ —          │ —        │  1B  │
+# │ Qwen3-0.6B           │ —    │ —     │ —          │ —        │ 0.6B │
+# └──────────────────────┴──────┴───────┴────────────┴──────────┴──────┘
+#
+# * Qwen3-4B MMLU score is MMLU-Redux variant, not directly comparable
+#
+# ═══════════════════════════════════════════════════════════════════════════
+# Best Pick by Use Case
+# ═══════════════════════════════════════════════════════════════════════════
+#
+#   Best overall quality (sub-10B):    Qwen3-8B
+#   Best coding model:                 Phi-4-Mini (HumanEval 74.4)
+#   Best math model:                   Qwen3-4B (MATH-500: 97.0)
+#   Best multilingual:                 Qwen3-8B (119 langs) or Gemma3-4B (140+ langs)
+#   Best for small datasets:           Qwen3-1.7B or Llama-3.2-1B
+#   Best long context:                 Llama-3.1-8B / Qwen3-8B (128K native)
+#   Best cost efficiency:              Qwen3-4B on A4000 ($0.16/hr)
+#   Best for edge/mobile:              SmolLM2-360M or Qwen3-0.6B
+#
+# ═══════════════════════════════════════════════════════════════════════════
+
+
+# GPU pricing reference (RunPod community cloud, approximate $/hr)
 gpu_pricing:
   "NVIDIA RTX A4000": 0.16
   "NVIDIA RTX A5000": 0.22
   "NVIDIA A40": 0.39
   "NVIDIA RTX A6000": 0.44
+  "NVIDIA L40S": 0.74
   "NVIDIA A100 80GB PCIe": 1.09
   "NVIDIA A100-SXM4-80GB": 1.34
   "NVIDIA H100 80GB HBM3": 2.49

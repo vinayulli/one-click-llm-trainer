@@ -277,14 +277,14 @@ async function loadModelSuggestions() {
         ${result.suggestions.map((m, i) => `
           <div class="model-card ${m.model_id === state.selectedModel ? 'selected' : ''} ${i === 0 ? 'recommended' : ''}"
                onclick="selectModel('${m.model_id}')" id="model-${i}">
-            ${i === 0 ? '<span class="badge badge-recommended">Recommended</span>' : ''}
-            ${m.model_id === state.selectedModel ? '<span class="badge badge-selected">Selected</span>' : ''}
+            ${i === 0 ? '<span class="badge badge-recommended">Best Pick</span>' : ''}
+            ${m.model_id === state.selectedModel && i !== 0 ? '<span class="badge badge-selected">Selected</span>' : ''}
             <div class="model-name">${m.display_name}</div>
-            <div class="model-meta">${m.model_id} &middot; ${m.parameter_count} params</div>
+            <div class="model-meta">${m.model_id} &middot; ${m.parameter_count} params &middot; Score: ${m.score}</div>
             <div class="model-stats">
               <span>GPU: <strong>${m.recommended_gpu}</strong></span>
-              <span>Time: <strong>~${m.estimated_train_time_hours}h</strong></span>
-              <span>Cost: <strong>~$${m.estimated_cost_usd}</strong></span>
+              <span>Est. time: <strong>~${m.estimated_train_time_hours}h</strong></span>
+              <span>Est. cost: <strong>~$${m.estimated_cost_usd}</strong></span>
             </div>
             <div class="model-reasoning">${m.reasoning}</div>
           </div>
