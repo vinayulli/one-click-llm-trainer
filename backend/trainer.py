@@ -17,6 +17,7 @@ async def start_training(
     base_model: str,
     settings: Settings,
     gpu_type: str | None = None,
+    callback_base_url: str = "",
 ) -> dict:
     """
     1. Upload worker scripts to HF (so pods can pull them — no Docker build)
@@ -57,6 +58,7 @@ async def start_training(
             "dataset_repo": dataset_repo,
             "worker_repo": worker_repo,
             "gpu_type": gpu_type or settings.runpod.gpu_type_id,
+            "progress": {},
         },
     )
 
@@ -68,6 +70,7 @@ async def start_training(
         base_model=base_model,
         worker_repo=worker_repo,
         gpu_type=gpu_type,
+        callback_url=callback_base_url,
     )
 
     pod_id = pod.get("id", "")
@@ -84,7 +87,7 @@ async def start_training(
 
 
 async def get_training_status(project_id: str, settings: Settings) -> dict:
-    """Poll RunPod for training job status."""
+    """Poll RunPod for training job status + return cached progress from callbacks."""
     from backend.runpod_client import get_pod_status
     from backend.storage import get_latest_job
 
@@ -94,6 +97,7 @@ async def get_training_status(project_id: str, settings: Settings) -> dict:
 
     metadata = json.loads(job.metadata_json or "{}")
     pod_id = metadata.get("runpod_pod_id", "")
+    progress = metadata.get("progress", {})
 
     result = {
         "job_id": job.id,
@@ -101,7 +105,7 @@ async def get_training_status(project_id: str, settings: Settings) -> dict:
         "status": job.status,
         "base_model": metadata.get("base_model", ""),
         "runpod_pod_id": pod_id,
-        "progress": {},
+        "progress": progress,
     }
 
     if pod_id and job.status in ("pending", "running"):
@@ -111,15 +115,29 @@ async def get_training_status(project_id: str, settings: Settings) -> dict:
             runtime = pod_info.get("runtime", {})
 
             result["pod_status"] = pod_status
-            result["progress"] = {
-                "uptime_seconds": runtime.get("uptimeInSeconds", 0) if runtime else 0,
-                "gpu_util": runtime.get("gpus", [{}])[0].get("gpuUtilPerc", 0) if runtime and runtime.get("gpus") else 0,
-            }
+
+            # Enrich progress with RunPod GPU metrics
+            if runtime:
+                gpu_util = 0
+                gpu_temp = 0
+                gpu_mem = 0
+                gpus = runtime.get("gpus", [])
+                if gpus:
+                    gpu_util = gpus[0].get("gpuUtilPerc", 0)
+                    gpu_temp = gpus[0].get("gpuTemperature", 0)
+                    gpu_mem = gpus[0].get("memoryUtilPerc", 0)
+
+                result["progress"]["gpu_util"] = gpu_util
+                result["progress"]["gpu_temp"] = gpu_temp
+                result["progress"]["gpu_mem"] = gpu_mem
+                result["progress"]["uptime_seconds"] = runtime.get("uptimeInSeconds", 0)
 
             # If pod has exited, mark job complete or failed
             if pod_status == "EXITED":
-                await update_job(job.id, status="completed")
-                await update_project_stage(project_id, "training_complete")
+                # Check if worker already reported completion via callback
+                if job.status != "completed":
+                    await update_job(job.id, status="completed")
+                    await update_project_stage(project_id, "training_complete")
                 result["status"] = "completed"
 
         except Exception as e:

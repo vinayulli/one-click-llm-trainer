@@ -64,7 +64,7 @@ def main():
     lora_r = get_env_int("LORA_R", 16)
     lora_alpha = get_env_int("LORA_ALPHA", 32)
     lora_dropout = get_env_float("LORA_DROPOUT", 0.05)
-    num_epochs = get_env_int("NUM_EPOCHS", 3)
+    num_epochs = get_env_float("NUM_EPOCHS", 0.5)
     batch_size = get_env_int("BATCH_SIZE", 4)
     learning_rate = get_env_float("LEARNING_RATE", 2e-4)
     max_seq_length = get_env_int("MAX_SEQ_LENGTH", 2048)

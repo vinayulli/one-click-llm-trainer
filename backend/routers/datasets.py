@@ -105,11 +105,15 @@ async def get_model_suggestions(project_id: str):
                 ex = json.loads(line)
                 sample_texts.append(ex.get("output", ""))
 
+    train_cfg = settings.training.training_args
     suggestions = suggest_models(
         num_examples=raw_stats.get("total_examples", 0),
         sample_texts=sample_texts,
         avg_instruction_length=raw_stats.get("avg_instruction_length", 0),
         avg_output_length=raw_stats.get("avg_output_length", 0),
+        epochs=train_cfg.num_train_epochs,
+        batch_size=train_cfg.per_device_train_batch_size,
+        grad_accum=train_cfg.gradient_accumulation_steps,
     )
 
     await update_project_stage(project_id, "model_suggested")

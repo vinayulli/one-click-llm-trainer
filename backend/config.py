@@ -51,7 +51,7 @@ class LoRAConfig(BaseModel):
 
 
 class TrainingArgsConfig(BaseModel):
-    num_train_epochs: int = 3
+    num_train_epochs: float = 0.5
     per_device_train_batch_size: int = 4
     gradient_accumulation_steps: int = 4
     learning_rate: float = 2e-4
@@ -96,6 +96,10 @@ class Settings(BaseSettings):
     runpod_api_key: str = ""
     runpod_volume_id: str = ""
 
+    # Public URL of this backend (for RunPod worker callbacks)
+    # e.g. https://your-server.com or ngrok URL
+    public_url: str = ""
+
     # Sub-configs
     runpod: RunPodConfig = Field(default_factory=RunPodConfig)
     huggingface: HuggingFaceConfig = Field(default_factory=HuggingFaceConfig)
@@ -124,7 +128,7 @@ class Settings(BaseSettings):
 def load_settings(config_path: str | None = None) -> Settings:
     """Load settings, optionally merging a YAML config file."""
     if config_path and Path(config_path).exists():
-        with open(config_path) as f:
+        with open(config_path, encoding="utf-8") as f:
             data = yaml.safe_load(f) or {}
 
         project = data.get("project", {})

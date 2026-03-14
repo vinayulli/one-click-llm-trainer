@@ -22,10 +22,24 @@
 
     <!-- ═══════════ Step 1: Create Project ═══════════ -->
     <div class="step-section active" id="step-create">
+
+      <!-- Existing Projects -->
+      <div class="card" id="existing-projects-card" style="display:none">
+        <div class="card-header">
+          <div class="icon">&#8634;</div>
+          <h2>Continue Existing Project</h2>
+        </div>
+        <p style="color:var(--text-dim);margin-bottom:16px;font-size:0.9rem">
+          Pick a project to resume from where you left off.
+        </p>
+        <div id="existing-projects-list"></div>
+      </div>
+
+      <!-- Create New -->
       <div class="card">
         <div class="card-header">
           <div class="icon">1</div>
-          <h2>Create Project</h2>
+          <h2>Create New Project</h2>
         </div>
         <div id="create-alert"></div>
         <div class="form-group">
@@ -121,6 +135,7 @@
           Launches a GPU pod on RunPod, runs QLoRA fine-tuning, merges the adapter, and uploads the final model to HuggingFace.
         </p>
         <div id="train-alert"></div>
+        <div id="training-config" style="display:none;margin-bottom:20px"></div>
 
         <div class="btn-group">
           <button class="btn btn-primary" id="btn-train" onclick="startTraining()">Start Training</button>

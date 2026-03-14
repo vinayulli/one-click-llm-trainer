@@ -3,9 +3,14 @@ RunPod SDK wrapper for pod lifecycle management.
 
 Uses standard RunPod base images (runpod/pytorch, vllm/vllm-openai).
 Worker code is pulled from HuggingFace at pod startup — no custom Docker build needed.
+
+Startup scripts are passed as base64-encoded env vars to avoid GraphQL
+string escaping issues with RunPod's API.
 """
 
 from __future__ import annotations
+
+import base64
 
 import runpod
 from loguru import logger
@@ -17,106 +22,60 @@ def _init_runpod(settings: Settings):
     runpod.api_key = settings.runpod_api_key
 
 
-def _training_startup_script(worker_repo: str, hf_token: str) -> str:
-    """
-    Generate a bash startup script that:
-    1. Installs worker Python dependencies
-    2. Pulls worker scripts from HuggingFace
-    3. Runs the training script
-    """
+def _encode_script(script: str) -> str:
+    """Base64-encode a startup script for safe transport via env var."""
+    return base64.b64encode(script.encode("utf-8")).decode("ascii")
+
+
+def _training_script(worker_repo: str, hf_token: str) -> str:
     return f"""#!/bin/bash
 set -e
-
-echo "=== One Click LLM Trainer: Setting up training environment ==="
-
-# Install worker dependencies
-pip install --no-cache-dir \
-    transformers==4.47.1 \
-    peft==0.14.0 \
-    trl==0.13.0 \
-    accelerate==1.2.1 \
-    bitsandbytes==0.45.0 \
-    datasets==3.2.0 \
-    huggingface-hub>=0.21.0 \
-    loguru==0.7.3 \
-    openai==1.58.1
-
-echo "=== Dependencies installed ==="
-
-# Pull worker scripts from HuggingFace
-pip install -q huggingface_hub
-python -c "
-from huggingface_hub import snapshot_download
-snapshot_download(
-    repo_id='{worker_repo}',
-    local_dir='/workspace/oclt',
-    token='{hf_token}',
-)
-"
-
-echo "=== Worker scripts downloaded ==="
-
-# Run training
+echo "=== OCLT: Installing dependencies ==="
+pip install --no-cache-dir transformers==4.47.1 peft==0.14.0 trl==0.13.0 accelerate==1.2.1 bitsandbytes==0.45.0 datasets==3.2.0 huggingface-hub loguru==0.7.3 openai==1.58.1
+echo "=== OCLT: Downloading worker scripts ==="
+python -c "from huggingface_hub import snapshot_download; snapshot_download(repo_id='{worker_repo}', local_dir='/workspace/oclt', token='{hf_token}')"
+echo "=== OCLT: Starting training ==="
 cd /workspace/oclt
 PYTHONPATH=/workspace/oclt python -m worker.train
 """
 
 
-def _eval_startup_script(worker_repo: str, hf_token: str) -> str:
-    """Startup script for the evaluation pod."""
+def _eval_script(worker_repo: str, hf_token: str) -> str:
     return f"""#!/bin/bash
 set -e
-
-echo "=== One Click LLM Trainer: Setting up evaluation environment ==="
-
-pip install --no-cache-dir \
-    transformers==4.47.1 \
-    peft==0.14.0 \
-    accelerate==1.2.1 \
-    bitsandbytes==0.45.0 \
-    datasets==3.2.0 \
-    huggingface-hub>=0.21.0 \
-    loguru==0.7.3 \
-    openai==1.58.1 \
-    rouge-score==0.1.2 \
-    scikit-learn==1.6.1
-
-echo "=== Dependencies installed ==="
-
-python -c "
-from huggingface_hub import snapshot_download
-snapshot_download(
-    repo_id='{worker_repo}',
-    local_dir='/workspace/oclt',
-    token='{hf_token}',
-)
-"
-
-echo "=== Worker scripts downloaded ==="
-
+echo "=== OCLT: Installing dependencies ==="
+pip install --no-cache-dir transformers==4.47.1 peft==0.14.0 accelerate==1.2.1 bitsandbytes==0.45.0 datasets==3.2.0 huggingface-hub loguru==0.7.3 openai==1.58.1 rouge-score==0.1.2 scikit-learn==1.6.1
+echo "=== OCLT: Downloading worker scripts ==="
+python -c "from huggingface_hub import snapshot_download; snapshot_download(repo_id='{worker_repo}', local_dir='/workspace/oclt', token='{hf_token}')"
+echo "=== OCLT: Starting evaluation ==="
 cd /workspace/oclt
 PYTHONPATH=/workspace/oclt python -m worker.evaluate
 """
 
 
-def _vllm_startup_script(hf_model_repo: str, hf_token: str, vllm_cfg) -> str:
-    """Startup script for vLLM deployment pod."""
+def _vllm_script(hf_model_repo: str, hf_token: str, vllm_cfg) -> str:
     return f"""#!/bin/bash
 set -e
-
-echo "=== One Click LLM Trainer: Starting vLLM server ==="
-
 export HF_TOKEN="{hf_token}"
-
-python -m vllm.entrypoints.openai.api_server \
-    --model {hf_model_repo} \
-    --host 0.0.0.0 \
-    --port 8000 \
-    --tensor-parallel-size {vllm_cfg.tensor_parallel_size} \
-    --max-model-len {vllm_cfg.max_model_len} \
-    --gpu-memory-utilization {vllm_cfg.gpu_memory_utilization} \
-    --trust-remote-code
+python -m vllm.entrypoints.openai.api_server --model {hf_model_repo} --host 0.0.0.0 --port 8000 --tensor-parallel-size {vllm_cfg.tensor_parallel_size} --max-model-len {vllm_cfg.max_model_len} --gpu-memory-utilization {vllm_cfg.gpu_memory_utilization} --trust-remote-code
 """
+
+
+# The docker_args decode the base64 STARTUP_SCRIPT env var and execute it.
+# This avoids all quoting/newline issues with RunPod's GraphQL API.
+# RunPod's SDK wraps docker_args in double quotes in the GraphQL mutation:
+#   dockerArgs: "..."
+# This means docker_args CANNOT contain " or $ (GraphQL treats $ as variable).
+# Solution: python one-liner using only single quotes — no " or $ anywhere.
+_BOOTSTRAP_CMD = (
+    "python3 -c '"
+    "import os,base64,subprocess;"
+    "s=base64.b64decode(os.environ.get(chr(83)+chr(84)+chr(65)+chr(82)+chr(84)+chr(85)+chr(80)+chr(95)+chr(83)+chr(67)+chr(82)+chr(73)+chr(80)+chr(84)));"
+    "f=open(chr(47)+chr(116)+chr(109)+chr(112)+chr(47)+chr(115)+chr(46)+chr(115)+chr(104),chr(119)+chr(98));"
+    "f.write(s);f.close();"
+    "subprocess.run([chr(98)+chr(97)+chr(115)+chr(104),chr(47)+chr(116)+chr(109)+chr(112)+chr(47)+chr(115)+chr(46)+chr(115)+chr(104)])"
+    "'"
+)
 
 
 def create_training_pod(
@@ -126,14 +85,16 @@ def create_training_pod(
     base_model: str,
     worker_repo: str,
     gpu_type: str | None = None,
+    callback_url: str = "",
 ) -> dict:
     """Create a RunPod GPU pod for training using a standard base image."""
     _init_runpod(settings)
 
     gpu = gpu_type or settings.runpod.gpu_type_id
-    startup = _training_startup_script(worker_repo, settings.hf_token)
+    script = _training_script(worker_repo, settings.hf_token)
 
     env_vars = {
+        "STARTUP_SCRIPT": _encode_script(script),
         "JOB_TYPE": "train",
         "JOB_ID": job_id,
         "PROJECT_ID": project_id,
@@ -152,6 +113,10 @@ def create_training_pod(
         "MAX_SEQ_LENGTH": str(settings.training.training_args.max_seq_length),
     }
 
+    # Callback URL for real-time progress updates from worker to backend
+    if callback_url:
+        env_vars["CALLBACK_URL"] = f"{callback_url}/api/projects/{project_id}/train/callback"
+
     pod_config = {
         "name": f"oclt-train-{project_id}-{job_id[:6]}",
         "image_name": settings.runpod.training_image,
@@ -160,14 +125,13 @@ def create_training_pod(
         "volume_in_gb": 80,
         "container_disk_in_gb": 30,
         "env": env_vars,
-        "docker_args": f"bash -c '{startup}'",
+        "docker_args": _BOOTSTRAP_CMD,
     }
 
     if settings.runpod_volume_id:
         pod_config["network_volume_id"] = settings.runpod_volume_id
 
     logger.info(f"Creating RunPod training pod: {pod_config['name']} on {gpu}")
-    logger.info(f"Using base image: {settings.runpod.training_image} (no custom Docker needed)")
     pod = runpod.create_pod(**pod_config)
     logger.info(f"Pod created: {pod}")
     return pod
@@ -186,9 +150,10 @@ def create_eval_pod(
     _init_runpod(settings)
 
     gpu = gpu_type or settings.runpod.gpu_type_id
-    startup = _eval_startup_script(worker_repo, settings.hf_token)
+    script = _eval_script(worker_repo, settings.hf_token)
 
     env_vars = {
+        "STARTUP_SCRIPT": _encode_script(script),
         "JOB_TYPE": "evaluate",
         "JOB_ID": job_id,
         "PROJECT_ID": project_id,
@@ -208,7 +173,7 @@ def create_eval_pod(
         "volume_in_gb": 80,
         "container_disk_in_gb": 30,
         "env": env_vars,
-        "docker_args": f"bash -c '{startup}'",
+        "docker_args": _BOOTSTRAP_CMD,
     }
 
     if settings.runpod_volume_id:
@@ -230,9 +195,10 @@ def create_deployment_pod(
 
     gpu = gpu_type or settings.runpod.gpu_type_id
     vllm_cfg = settings.deployment.vllm
-    startup = _vllm_startup_script(hf_model_repo, settings.hf_token, vllm_cfg)
+    script = _vllm_script(hf_model_repo, settings.hf_token, vllm_cfg)
 
     env_vars = {
+        "STARTUP_SCRIPT": _encode_script(script),
         "MODEL_NAME": hf_model_repo,
         "HF_TOKEN": settings.hf_token,
     }
@@ -246,7 +212,7 @@ def create_deployment_pod(
         "container_disk_in_gb": 30,
         "ports": "8000/http",
         "env": env_vars,
-        "docker_args": f"bash -c '{startup}'",
+        "docker_args": _BOOTSTRAP_CMD,
     }
 
     if settings.runpod_volume_id:

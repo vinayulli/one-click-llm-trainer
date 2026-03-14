@@ -16,7 +16,7 @@ CATALOG_PATH = Path(__file__).resolve().parent.parent / "configs" / "model_catal
 
 
 def _load_catalog() -> list[dict]:
-    with open(CATALOG_PATH) as f:
+    with open(CATALOG_PATH, encoding="utf-8") as f:
         data = yaml.safe_load(f)
     return data.get("models", [])
 
@@ -56,11 +56,58 @@ def _detect_domain(texts: list[str]) -> list[str]:
     return domains
 
 
+def _estimate_training_time(
+    num_examples: int,
+    param_billions: float,
+    batch_size: int,
+    grad_accum: int,
+    epochs: float,
+    gpu_name: str,
+) -> float:
+    """
+    Estimate training time in hours based on hardware and dataset.
+
+    Rough model: each training step processes (batch_size * grad_accum) examples.
+    Step time scales with model size and inversely with GPU speed.
+    """
+    # Steps per epoch
+    effective_batch = batch_size * grad_accum
+    steps_per_epoch = max(num_examples / effective_batch, 1)
+    total_steps = steps_per_epoch * epochs
+
+    # Seconds per step — baseline for 7B model on A5000
+    # ~2.5s/step for 7B QLoRA on A5000, scales roughly linearly with params
+    base_secs_per_step = 2.5 * (param_billions / 7.0)
+
+    # GPU speed multiplier (relative to A5000)
+    gpu_speed = {
+        "NVIDIA RTX A4000": 0.7,
+        "NVIDIA RTX A5000": 1.0,
+        "NVIDIA A40": 1.3,
+        "NVIDIA RTX A6000": 1.4,
+        "NVIDIA L40S": 1.8,
+        "NVIDIA A100 80GB PCIe": 2.5,
+        "NVIDIA A100-SXM4-80GB": 3.0,
+        "NVIDIA H100 80GB HBM3": 4.5,
+    }
+    speed = gpu_speed.get(gpu_name, 1.0)
+    secs_per_step = base_secs_per_step / speed
+
+    # Add overhead: model loading (~3 min for 7B), dep install (~2 min)
+    overhead_secs = 300 * (param_billions / 7.0) + 120
+
+    total_secs = (total_steps * secs_per_step) + overhead_secs
+    return round(total_secs / 3600, 2)
+
+
 def suggest_models(
     num_examples: int,
     sample_texts: list[str],
     avg_instruction_length: float = 0.0,
     avg_output_length: float = 0.0,
+    epochs: float = 0.5,
+    batch_size: int = 4,
+    grad_accum: int = 4,
 ) -> list[ModelSuggestion]:
     """
     Score and rank base models based on dataset characteristics.
@@ -75,9 +122,14 @@ def suggest_models(
     scored: list[tuple[dict, float, list[str]]] = []
 
     for model in catalog:
+        params = model["param_billions"]
+
+        # Skip models under 1B — too small for meaningful fine-tuning
+        if params < 1.0:
+            continue
+
         score = 0.0
         reasons: list[str] = []
-        params = model["param_billions"]
 
         # --- Dataset size fit ---
         if num_examples < 200:
@@ -174,9 +226,16 @@ def suggest_models(
     # Return top 5 to give users more choices with the expanded catalog
     suggestions = []
     for model, score, reasons in scored[:5]:
-        # Estimate training time (rough: ~1 min per 100 examples per billion params)
-        est_hours = (num_examples / 100) * (model["param_billions"] / 7.0) * (1 / 60)
-        est_hours = max(0.1, round(est_hours, 2))
+        rec_batch = model.get("recommended_batch_size", batch_size)
+
+        est_hours = _estimate_training_time(
+            num_examples=num_examples,
+            param_billions=model["param_billions"],
+            batch_size=rec_batch,
+            grad_accum=grad_accum,
+            epochs=epochs,
+            gpu_name=model["recommended_gpu"],
+        )
         est_cost = round(est_hours * model["cost_per_hour"], 2)
 
         suggestions.append(
